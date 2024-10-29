@@ -391,12 +391,12 @@ void pm_policy_latency_changed_unsubscribe(struct pm_policy_latency_subscription
 	k_spin_unlock(&latency_lock, key);
 }
 
-void pm_policy_event_register(struct pm_policy_event *evt, uint32_t time_us)
+void pm_policy_event_register(struct pm_policy_event *evt, uint32_t cycle)
 {
 	k_spinlock_key_t key = k_spin_lock(&events_lock);
 	uint32_t cyc = k_cycle_get_32();
 
-	evt->value_cyc = cyc + k_us_to_cyc_ceil32(time_us);
+	evt->value_cyc = cyc + cycle;
 	sys_slist_append(&events_list, &evt->node);
 	update_next_event(cyc);
 
