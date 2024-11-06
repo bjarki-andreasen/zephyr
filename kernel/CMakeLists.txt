@@ -77,7 +77,7 @@ list(APPEND kernel_files
   queue.c
   sem.c
   stack.c
-  system_work_q.c
+  #system_work_q.c
   work.c
   condvar.c
   priority_queues.c
