@@ -552,6 +552,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 	z_mem_manage_boot_finish();
 #endif /* CONFIG_MMU */
 
+#ifdef CONFIG_MAIN
 #ifdef CONFIG_BOOTARGS
 	extern int main(int, char **);
 
@@ -563,6 +564,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 	(void)main();
 #endif /* CONFIG_BOOTARGS */
+#endif /* CONFIG_MAIN */
 
 	/* Mark non-essential since main() has no more work to do */
 	z_thread_essential_clear(&z_main_thread);

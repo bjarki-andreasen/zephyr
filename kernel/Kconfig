@@ -1004,6 +1004,13 @@ config BOOTARGS
 	help
 	  Enables bootargs support and passing them to main().
 
+config MAIN
+	bool "Support main"
+	default y
+	help
+	  Enables main() application entry point by invoking main from the system
+	  background thread once initialization is complete
+
 config DYNAMIC_BOOTARGS
 	bool "Support dynamic bootargs"
 	depends on BOOTARGS && (MULTIBOOT_INFO || BUILD_OUTPUT_EFI)
