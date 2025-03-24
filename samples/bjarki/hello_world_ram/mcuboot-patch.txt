@@ -1,0 +1,53 @@
+commit 793dc281acdb76cd7dcadc097b2377bc9e66581c
+Author: Bjarki Arge Andreasen <bjarki.andreasen@nordicsemi.no>
+Date:   Thu Mar 13 15:18:40 2025 +0100
+
+    h20-support
+    
+    Signed-off-by: Bjarki Arge Andreasen <bjarki.andreasen@nordicsemi.no>
+
+diff --git a/boot/zephyr/include/mcuboot_config/mcuboot_config.h b/boot/zephyr/include/mcuboot_config/mcuboot_config.h
+index b5fcf82b..dc75fff2 100644
+--- a/boot/zephyr/include/mcuboot_config/mcuboot_config.h
++++ b/boot/zephyr/include/mcuboot_config/mcuboot_config.h
+@@ -395,6 +395,9 @@
+ #elif defined(CONFIG_NRFX_WDT31)
+ #define MCUBOOT_WATCHDOG_FEED() \
+     FEED_WDT_INST(31);
++#elif defined(CONFIG_NRFX_WDT010)
++#define MCUBOOT_WATCHDOG_FEED() \
++    FEED_WDT_INST(010);
+ #else
+ #error "No NRFX WDT instances enabled"
+ #endif
+diff --git a/boot/zephyr/main.c b/boot/zephyr/main.c
+index 683b2f7f..41a3ebc0 100644
+--- a/boot/zephyr/main.c
++++ b/boot/zephyr/main.c
+@@ -154,7 +154,7 @@ static void do_boot(struct boot_rsp *rsp)
+      * consecutively. Manually set the stack pointer and jump into the
+      * reset vector
+      */
+-#ifdef CONFIG_BOOT_RAM_LOAD
++#if defined(CONFIG_BOOT_RAM_LOAD) || defined(CONFIG_SINGLE_APPLICATION_SLOT_RAM_LOAD)
+     /* Get ram address for image */
+     vt = (struct arm_vector_table *)(rsp->br_hdr->ih_load_addr + rsp->br_hdr->ih_hdr_size);
+ #else
+@@ -576,7 +576,7 @@ int main(void)
+         FIH_PANIC;
+     }
+ 
+-#ifdef CONFIG_BOOT_RAM_LOAD
++#if defined(CONFIG_BOOT_RAM_LOAD) || defined(CONFIG_SINGLE_APPLICATION_SLOT_RAM_LOAD)
+     BOOT_LOG_INF("Bootloader chainload address offset: 0x%x",
+                  rsp.br_hdr->ih_load_addr);
+ #else
+@@ -590,6 +590,8 @@ int main(void)
+ 
+ #if defined(MCUBOOT_DIRECT_XIP)
+     BOOT_LOG_INF("Jumping to the image slot");
++#elif defined(CONFIG_BOOT_RAM_LOAD) || defined(CONFIG_SINGLE_APPLICATION_SLOT_RAM_LOAD)
++    BOOT_LOG_INF("Jumping to the RAM loaded image");
+ #else
+     BOOT_LOG_INF("Jumping to the first image slot");
+ #endif

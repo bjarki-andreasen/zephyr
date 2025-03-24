@@ -1,0 +1,28 @@
+
+
+&sram0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = < 0x1 >;
+		#size-cells = < 0x1 >;
+		sram0_boot_sram_part: partition@0 {
+			label = "boot-sram";
+			reg = < 0x0 0x10000 >;
+		};
+		sram0_app_code_part: partition@10000 {
+			label = "app-code";
+			reg = < 0x10000 0x20000 >;
+		};
+		sram0_app_sram_part: partition@30000 {
+			label = "app-sram";
+			reg = < 0x30000 0x10000 >;
+		};
+	};
+};
+
+/{
+	chosen {
+		zephyr,code-partition = &sram0_app_code_part;
+		zephyr,sram = &sram0_app_sram_part;
+	};
+};

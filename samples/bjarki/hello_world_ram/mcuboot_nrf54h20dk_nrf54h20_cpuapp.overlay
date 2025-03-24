@@ -1,0 +1,42 @@
+&cpuapp_rx_partitions{
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	/delete-node/ partition@94000;
+
+	boot_partition: partition@94000 {
+		label = "mcuboot";
+		reg = <0x94000 DT_SIZE_K(64)>;
+	};
+
+	slot0_partition: partition@a4000 {
+		label = "image-0";
+		reg = <0xa4000 DT_SIZE_K(256)>;
+	};
+};
+
+&cpuapp_ram0x_region {
+	nordic,access = <NRF_OWNER_ID_APPLICATION NRF_PERM_RWXS>;
+
+	/delete-node/ memory@1000;
+
+	boot_data: memory@1000 {
+		reg = <0x1000 DT_SIZE_K(64)>;
+	};
+
+	cpuapp_data: memory@11000 {
+		reg = <0x11000 DT_SIZE_K(192)>;
+	};
+};
+
+/{
+	chosen {
+		zephyr,code-partition = &boot_partition;
+		zephyr,flash-controller = &mram1x;
+		zephyr,sram = &boot_data;
+	};
+};
+
+&mram1x {
+	status = "okay";
+};
