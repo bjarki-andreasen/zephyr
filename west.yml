@@ -23,6 +23,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
+    - name: bjarki
+      url-base: https://github.com/bjarki-andreasen
 
   group-filter: [-babblesim, -optional]
 
@@ -303,8 +305,9 @@ manifest:
       groups:
         - crypto
     - name: mcuboot
-      revision: c8470fb145f8aff92696d05396fb77c3b8068b32
+      revision: 7a5c4f3ef674fa3ea01db93c6f5d4fc873fbb338
       path: bootloader/mcuboot
+      remote: bjarki
       groups:
         - bootloader
     - name: mipi-sys-t
