@@ -474,10 +474,6 @@
 #define sys_port_trace_pm_device_runtime_put_exit(dev, ret)
 #define sys_port_trace_pm_device_runtime_put_async_enter(dev, delay)
 #define sys_port_trace_pm_device_runtime_put_async_exit(dev, delay, ret)
-#define sys_port_trace_pm_device_runtime_enable_enter(dev)
-#define sys_port_trace_pm_device_runtime_enable_exit(dev, ret)
-#define sys_port_trace_pm_device_runtime_disable_enter(dev)
-#define sys_port_trace_pm_device_runtime_disable_exit(dev, ret)
 
 void sys_trace_idle(void);
 void sys_trace_idle_exit(void);

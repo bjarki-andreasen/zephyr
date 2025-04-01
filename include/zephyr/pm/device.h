@@ -42,12 +42,8 @@ enum pm_device_flag {
 	PM_DEVICE_FLAG_WS_CAPABLE,
 	/** Indicates if the device is being used as wakeup source. */
 	PM_DEVICE_FLAG_WS_ENABLED,
-	/** Indicates if device runtime is enabled  */
-	PM_DEVICE_FLAG_RUNTIME_ENABLED,
 	/** Indicates if the device is used as a power domain */
 	PM_DEVICE_FLAG_PD,
-	/** Indicates if device runtime PM should be automatically enabled */
-	PM_DEVICE_FLAG_RUNTIME_AUTO,
 	/** Indicates that device runtime PM supports suspending and resuming from any context. */
 	PM_DEVICE_FLAG_ISR_SAFE,
 };
@@ -223,8 +219,6 @@ BUILD_ASSERT(offsetof(struct pm_device_isr, base) == 0);
 		 DT_NODE_EXISTS(node_id),				 \
 		 ((DT_PROP_OR(node_id, wakeup_source, 0)		 \
 			 << PM_DEVICE_FLAG_WS_CAPABLE) |		 \
-		  (DT_PROP_OR(node_id, zephyr_pm_device_runtime_auto, 0) \
-			 << PM_DEVICE_FLAG_RUNTIME_AUTO) |		 \
 		  (DT_NODE_HAS_COMPAT(node_id, power_domain) <<		 \
 			 PM_DEVICE_FLAG_PD)),				 \
 		 (0)))

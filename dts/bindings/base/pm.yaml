@@ -16,12 +16,6 @@ properties:
       Wake up capable devices are disabled (interruptions will not wake up
       the system) by default but they can be enabled at runtime if necessary.
 
-  zephyr,pm-device-runtime-auto:
-    type: boolean
-    description: |
-      Automatically configure the device for runtime power management after the
-      init function runs.
-
   zephyr,disabling-power-states:
     type: phandles
     description: |

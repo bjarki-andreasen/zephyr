@@ -2109,32 +2109,6 @@
  */
 #define sys_port_trace_pm_device_runtime_put_async_exit(dev, delay, ret)
 
-/**
- * @brief Trace enabling device runtime PM call entry.
- * @param dev Device instance.
- */
-#define sys_port_trace_pm_device_runtime_enable_enter(dev)
-
-/**
- * @brief Trace enabling device runtime PM call exit.
- * @param dev Device instance.
- * @param ret Return value.
- */
-#define sys_port_trace_pm_device_runtime_enable_exit(dev, ret)
-
-/**
- * @brief Trace disabling device runtime PM call entry.
- * @param dev Device instance.
- */
-#define sys_port_trace_pm_device_runtime_disable_enter(dev)
-
-/**
- * @brief Trace disabling device runtime PM call exit.
- * @param dev Device instance.
- * @param ret Return value.
- */
-#define sys_port_trace_pm_device_runtime_disable_exit(dev, ret)
-
 /** @} */ /* end of subsys_tracing_apis_pm_device_runtime */
 
 /**

@@ -43,18 +43,10 @@ LOG_MODULE_DECLARE(pm_device, CONFIG_PM_DEVICE_LOG_LEVEL);
  * @retval -EBUSY If the device is busy.
  * @retval -errno Other negative errno, result of the action callback.
  */
-static int runtime_suspend(const struct device *dev, bool async,
-			k_timeout_t delay)
+int runtime_suspend(const struct device *dev, bool async, k_timeout_t delay)
 {
 	int ret = 0;
 	struct pm_device *pm = dev->pm;
-
-	/*
-	 * Early return if device runtime is not enabled.
-	 */
-	if (!atomic_test_bit(&pm->base.flags, PM_DEVICE_FLAG_RUNTIME_ENABLED)) {
-		return 0;
-	}
 
 	if (k_is_pre_kernel()) {
 		async = false;
@@ -174,13 +166,6 @@ int pm_device_runtime_get(const struct device *dev)
 
 	SYS_PORT_TRACING_FUNC_ENTER(pm, device_runtime_get, dev);
 
-	/*
-	 * Early return if device runtime is not enabled.
-	 */
-	if (!atomic_test_bit(&pm->base.flags, PM_DEVICE_FLAG_RUNTIME_ENABLED)) {
-		return 0;
-	}
-
 	if (atomic_test_bit(&dev->pm_base->flags, PM_DEVICE_FLAG_ISR_SAFE)) {
 		struct pm_device_isr *pm_sync = dev->pm_isr;
 		k_spinlock_key_t k = k_spin_lock(&pm_sync->lock);
@@ -274,16 +259,11 @@ end:
 	return ret;
 }
 
-
 static int put_sync_locked(const struct device *dev)
 {
 	int ret;
 	struct pm_device_isr *pm = dev->pm_isr;
 	uint32_t flags = pm->base.flags;
-
-	if (!(flags & BIT(PM_DEVICE_FLAG_RUNTIME_ENABLED))) {
-		return 0;
-	}
 
 	if (pm->base.usage == 0U) {
 		return -EALREADY;
@@ -370,202 +350,15 @@ int pm_device_runtime_put_async(const struct device *dev, k_timeout_t delay)
 	return ret;
 }
 
-__boot_func
-int pm_device_runtime_auto_enable(const struct device *dev)
-{
-	struct pm_device_base *pm = dev->pm_base;
-
-	/* No action needed if PM_DEVICE_FLAG_RUNTIME_AUTO is not enabled */
-	if (!pm || !atomic_test_bit(&pm->flags, PM_DEVICE_FLAG_RUNTIME_AUTO)) {
-		return 0;
-	}
-	return pm_device_runtime_enable(dev);
-}
-
-static int runtime_enable_sync(const struct device *dev)
-{
-	int ret;
-	struct pm_device_isr *pm = dev->pm_isr;
-	k_spinlock_key_t k = k_spin_lock(&pm->lock);
-
-	if (pm->base.state == PM_DEVICE_STATE_ACTIVE) {
-		ret = pm->base.action_cb(dev, PM_DEVICE_ACTION_SUSPEND);
-		if (ret < 0) {
-			goto unlock;
-		}
-
-		pm->base.state = PM_DEVICE_STATE_SUSPENDED;
-	} else {
-		ret = 0;
-	}
-
-	pm->base.flags |= BIT(PM_DEVICE_FLAG_RUNTIME_ENABLED);
-	pm->base.usage = 0U;
-unlock:
-	k_spin_unlock(&pm->lock, k);
-	return ret;
-}
-
-int pm_device_runtime_enable(const struct device *dev)
-{
-	int ret = 0;
-	struct pm_device *pm = dev->pm;
-
-	SYS_PORT_TRACING_FUNC_ENTER(pm, device_runtime_enable, dev);
-
-	if (pm == NULL) {
-		ret = -ENOTSUP;
-		goto end;
-	}
-
-	if (atomic_test_bit(&pm->base.flags, PM_DEVICE_FLAG_RUNTIME_ENABLED)) {
-		goto end;
-	}
-
-	if (pm_device_is_busy(dev)) {
-		ret = -EBUSY;
-		goto end;
-	}
-
-	if (atomic_test_bit(&dev->pm_base->flags, PM_DEVICE_FLAG_ISR_SAFE)) {
-		ret = runtime_enable_sync(dev);
-		goto end;
-	}
-
-	if (!k_is_pre_kernel()) {
-		(void)k_sem_take(&pm->lock, K_FOREVER);
-	}
-
-	/* lazy init of PM fields */
-	if (pm->dev == NULL) {
-		pm->dev = dev;
-		k_work_init_delayable(&pm->work, runtime_suspend_work);
-	}
-
-	if (pm->base.state == PM_DEVICE_STATE_ACTIVE) {
-		ret = pm->base.action_cb(pm->dev, PM_DEVICE_ACTION_SUSPEND);
-		if (ret < 0) {
-			goto unlock;
-		}
-		pm->base.state = PM_DEVICE_STATE_SUSPENDED;
-	}
-
-	pm->base.usage = 0U;
-
-	atomic_set_bit(&pm->base.flags, PM_DEVICE_FLAG_RUNTIME_ENABLED);
-
-unlock:
-	if (!k_is_pre_kernel()) {
-		k_sem_give(&pm->lock);
-	}
-
-end:
-	SYS_PORT_TRACING_FUNC_EXIT(pm, device_runtime_enable, dev, ret);
-	return ret;
-}
-
-static int runtime_disable_sync(const struct device *dev)
-{
-	struct pm_device_isr *pm = dev->pm_isr;
-	int ret;
-	k_spinlock_key_t k = k_spin_lock(&pm->lock);
-
-	if (pm->base.state == PM_DEVICE_STATE_SUSPENDED) {
-		ret = pm->base.action_cb(dev, PM_DEVICE_ACTION_RESUME);
-		if (ret < 0) {
-			goto unlock;
-		}
-
-		pm->base.state = PM_DEVICE_STATE_ACTIVE;
-	} else {
-		ret = 0;
-	}
-
-	pm->base.flags &= ~BIT(PM_DEVICE_FLAG_RUNTIME_ENABLED);
-unlock:
-	k_spin_unlock(&pm->lock, k);
-	return ret;
-}
-
-int pm_device_runtime_disable(const struct device *dev)
-{
-	int ret = 0;
-	struct pm_device *pm = dev->pm;
-
-	SYS_PORT_TRACING_FUNC_ENTER(pm, device_runtime_disable, dev);
-
-	if (pm == NULL) {
-		ret = -ENOTSUP;
-		goto end;
-	}
-
-	if (!atomic_test_bit(&pm->base.flags, PM_DEVICE_FLAG_RUNTIME_ENABLED)) {
-		goto end;
-	}
-
-	if (atomic_test_bit(&dev->pm_base->flags, PM_DEVICE_FLAG_ISR_SAFE)) {
-		ret = runtime_disable_sync(dev);
-		goto end;
-	}
-
-	if (!k_is_pre_kernel()) {
-		(void)k_sem_take(&pm->lock, K_FOREVER);
-	}
-
-	if (!k_is_pre_kernel()) {
-		if ((pm->base.state == PM_DEVICE_STATE_SUSPENDING) &&
-			((k_work_cancel_delayable(&pm->work) & K_WORK_RUNNING) == 0)) {
-			pm->base.state = PM_DEVICE_STATE_ACTIVE;
-			goto clear_bit;
-		}
-
-		/* wait until possible async suspend is completed */
-		while (pm->base.state == PM_DEVICE_STATE_SUSPENDING) {
-			k_event_clear(&pm->event, EVENT_MASK);
-			k_sem_give(&pm->lock);
-
-			k_event_wait(&pm->event, EVENT_MASK, false, K_FOREVER);
-
-			(void)k_sem_take(&pm->lock, K_FOREVER);
-		}
-	}
-
-	/* wake up the device if suspended */
-	if (pm->base.state == PM_DEVICE_STATE_SUSPENDED) {
-		ret = pm->base.action_cb(dev, PM_DEVICE_ACTION_RESUME);
-		if (ret < 0) {
-			goto unlock;
-		}
-
-		pm->base.state = PM_DEVICE_STATE_ACTIVE;
-	}
-
-clear_bit:
-	atomic_clear_bit(&pm->base.flags, PM_DEVICE_FLAG_RUNTIME_ENABLED);
-
-unlock:
-	if (!k_is_pre_kernel()) {
-		k_sem_give(&pm->lock);
-	}
-
-end:
-	SYS_PORT_TRACING_FUNC_EXIT(pm, device_runtime_disable, dev, ret);
-
-	return ret;
-}
-
-bool pm_device_runtime_is_enabled(const struct device *dev)
-{
-	struct pm_device_base *pm = dev->pm_base;
-
-	return pm && atomic_test_bit(&pm->flags, PM_DEVICE_FLAG_RUNTIME_ENABLED);
-}
-
 int pm_device_runtime_usage(const struct device *dev)
 {
-	if (!pm_device_runtime_is_enabled(dev)) {
-		return -ENOTSUP;
-	}
-
 	return dev->pm_base->usage;
+}
+
+void pm_device_runtime_init(const struct device *dev)
+{
+	struct pm_device *pm = dev->pm;
+
+	pm->dev = dev;
+	k_work_init_delayable(&pm->work, runtime_suspend_work);
 }

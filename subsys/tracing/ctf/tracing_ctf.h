@@ -359,10 +359,6 @@ extern "C" {
 #define sys_port_trace_pm_device_runtime_put_exit(dev, ret)
 #define sys_port_trace_pm_device_runtime_put_async_enter(dev, delay)
 #define sys_port_trace_pm_device_runtime_put_async_exit(dev, delay, ret)
-#define sys_port_trace_pm_device_runtime_enable_enter(dev)
-#define sys_port_trace_pm_device_runtime_enable_exit(dev, ret)
-#define sys_port_trace_pm_device_runtime_disable_enter(dev)
-#define sys_port_trace_pm_device_runtime_disable_exit(dev, ret)
 
 #define sys_trace_sys_init_enter(...)
 #define sys_trace_sys_init_exit(...)

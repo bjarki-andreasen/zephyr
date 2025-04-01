@@ -329,11 +329,6 @@ static int do_device_init(const struct device *dev)
 
 	dev->state->initialized = true;
 
-	if (rc == 0) {
-		/* Run automatic device runtime enablement */
-		(void)pm_device_runtime_auto_enable(dev);
-	}
-
 	return rc;
 }
 

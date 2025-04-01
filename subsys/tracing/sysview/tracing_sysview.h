@@ -694,18 +694,6 @@ void sys_trace_named_event(const char *name, uint32_t arg0, uint32_t arg1);
 #define sys_port_trace_pm_device_runtime_put_async_exit(dev, delay, ret)       \
 	SEGGER_SYSVIEW_RecordEndCallU32(TID_PM_DEVICE_RUNTIME_PUT_ASYNC,       \
 					(uint32_t)ret)
-#define sys_port_trace_pm_device_runtime_enable_enter(dev)		       \
-	SEGGER_SYSVIEW_RecordU32(TID_PM_DEVICE_RUNTIME_ENABLE,		       \
-				 (uint32_t)(uintptr_t)dev)
-#define sys_port_trace_pm_device_runtime_enable_exit(dev, ret)		       \
-	SEGGER_SYSVIEW_RecordEndCallU32(TID_PM_DEVICE_RUNTIME_ENABLE,	       \
-				     (uint32_t)ret)
-#define sys_port_trace_pm_device_runtime_disable_enter(dev)		       \
-	SEGGER_SYSVIEW_RecordU32(TID_PM_DEVICE_RUNTIME_DISABLE,		       \
-				 (uint32_t)(uintptr_t)dev)
-#define sys_port_trace_pm_device_runtime_disable_exit(dev, ret)		       \
-	SEGGER_SYSVIEW_RecordEndCallU32(TID_PM_DEVICE_RUNTIME_DISABLE,	       \
-					(uint32_t)ret)
 
 #define sys_trace_sys_init_enter(...)
 #define sys_trace_sys_init_exit(...)
