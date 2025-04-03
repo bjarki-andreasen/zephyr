@@ -71,7 +71,7 @@ int test_driver_init(const struct device *dev)
 
 	k_sem_init(&data->sync, 0, 1);
 
-	return 0;
+	return pm_device_driver_init(dev, test_driver_action);
 }
 
 #define PM_DEVICE_TYPE COND_CODE_1(CONFIG_TEST_PM_DEVICE_ISR_SAFE, (PM_DEVICE_ISR_SAFE), (0))

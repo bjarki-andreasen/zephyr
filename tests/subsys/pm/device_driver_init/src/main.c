@@ -42,7 +42,6 @@ ZTEST(device_driver_init, test_device_driver_init)
 	POWER_GPIO_CONFIG_IS(DT_NODELABEL(test_reg_chained), GPIO_OUTPUT_HIGH);
 	zassert_str_equal("active", pm_device_state_str(state),
 			  "Invalid device state");
-	/* Device powered, zephyr,pm-device-runtime-auto, starts suspended */
 	DEVICE_STATE_IS(DT_NODELABEL(test_reg_chained_auto), PM_DEVICE_STATE_SUSPENDED);
 	DEVICE_STATE_IS(DT_NODELABEL(test_reg_auto), PM_DEVICE_STATE_SUSPENDED);
 	POWER_GPIO_CONFIG_IS(DT_NODELABEL(test_reg_chained_auto), GPIO_OUTPUT_LOW);

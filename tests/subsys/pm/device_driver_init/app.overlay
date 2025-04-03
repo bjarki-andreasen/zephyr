@@ -17,14 +17,12 @@
 		enable-gpios = <&gpio0 2 0>;
 		power-domains = <&test_reg>;
 		#power-domain-cells = <0>;
-		zephyr,pm-device-runtime-auto;
 	};
 
 	test_reg_auto: test_reg_auto {
 		compatible = "power-domain-gpio";
 		enable-gpios = <&gpio0 3 0>;
 		#power-domain-cells = <0>;
-		zephyr,pm-device-runtime-auto;
 	};
 
 	test_reg_auto_chained: test_reg_auto_chained {
@@ -39,7 +37,6 @@
 		enable-gpios = <&gpio0 5 0>;
 		power-domains = <&test_reg_auto>;
 		#power-domain-cells = <0>;
-		zephyr,pm-device-runtime-auto;
 	};
 
 	test_reg_disabled: test_reg_disabled {

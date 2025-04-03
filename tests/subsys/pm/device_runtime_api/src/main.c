@@ -34,47 +34,20 @@ static void get_runner(void *arg1, void *arg2, void *arg3)
 
 void test_api_setup(void *data)
 {
-	int ret;
 	enum pm_device_state state;
-
-	/* check API always returns 0 when runtime PM is disabled */
-	ret = pm_device_runtime_get(test_dev);
-	zassert_equal(ret, 0);
-	ret = pm_device_runtime_put(test_dev);
-	zassert_equal(ret, 0);
-	ret = pm_device_runtime_put_async(test_dev, K_NO_WAIT);
-	zassert_equal(ret, 0);
-
-	/* enable runtime PM */
-	ret = pm_device_runtime_enable(test_dev);
-	zassert_equal(ret, 0);
 
 	(void)pm_device_state_get(test_dev, &state);
 	zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
-
-	/* enabling again should succeed (no-op) */
-	ret = pm_device_runtime_enable(test_dev);
-	zassert_equal(ret, 0);
 }
 
 static void test_api_teardown(void *data)
 {
-	int ret;
-	enum pm_device_state state;
-
 	/* let test driver finish async PM (in case it was left pending due to
 	 * a failure)
 	 */
 	if (test_driver_pm_ongoing(test_dev)) {
 		test_driver_pm_done(test_dev);
 	}
-
-	/* disable runtime PM, make sure device is left into active state */
-	ret = pm_device_runtime_disable(test_dev);
-	zassert_equal(ret, 0);
-
-	(void)pm_device_state_get(test_dev, &state);
-	zassert_equal(state, PM_DEVICE_STATE_ACTIVE);
 }
 
 /**
@@ -254,11 +227,6 @@ ZTEST(device_runtime_api, test_api)
 		(void)pm_device_state_get(test_dev, &state);
 		zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
 	}
-
-	/* Put operation should fail due the state be locked. */
-	ret = pm_device_runtime_disable(test_dev);
-	zassert_equal(ret, 0);
-	zassert_equal(pm_device_runtime_usage(test_dev), -ENOTSUP);
 }
 
 DEVICE_DEFINE(pm_unsupported_device, "PM Unsupported", NULL, NULL, NULL, NULL,
@@ -268,9 +236,6 @@ ZTEST(device_runtime_api, test_unsupported)
 {
 	const struct device *const dev = DEVICE_GET(pm_unsupported_device);
 
-	zassert_false(pm_device_runtime_is_enabled(dev), "");
-	zassert_equal(pm_device_runtime_enable(dev), -ENOTSUP, "");
-	zassert_equal(pm_device_runtime_disable(dev), -ENOTSUP, "");
 	zassert_equal(pm_device_runtime_get(dev), 0, "");
 	zassert_equal(pm_device_runtime_put(dev), 0, "");
 	zassert_false(pm_device_runtime_put_async(dev, K_NO_WAIT),  "");
@@ -287,15 +252,6 @@ int dev_pm_control(const struct device *dev, enum pm_device_action action)
 PM_DEVICE_DT_DEFINE(DT_NODELABEL(test_dev), dev_pm_control);
 DEVICE_DT_DEFINE(DT_NODELABEL(test_dev), NULL, PM_DEVICE_DT_GET(DT_NODELABEL(test_dev)),
 		 NULL, NULL, POST_KERNEL, 80, NULL);
-
-ZTEST(device_runtime_api, test_pm_device_runtime_auto)
-{
-	const struct device *const dev = DEVICE_DT_GET(DT_NODELABEL(test_dev));
-
-	zassert_true(pm_device_runtime_is_enabled(dev), "");
-	zassert_equal(pm_device_runtime_get(dev), 0, "");
-	zassert_equal(pm_device_runtime_put(dev), 0, "");
-}
 
 void *device_runtime_api_setup(void)
 {

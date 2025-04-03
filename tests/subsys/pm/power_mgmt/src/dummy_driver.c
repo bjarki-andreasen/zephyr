@@ -7,17 +7,16 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/types.h>
 #include <zephyr/pm/device.h>
-#include <zephyr/pm/device_runtime.h>
 #include "dummy_driver.h"
 
 static int dummy_open(const struct device *dev)
 {
-	return pm_device_runtime_get(dev);
+	return 0;
 }
 
 static int dummy_close(const struct device *dev)
 {
-	return pm_device_runtime_put(dev);
+	return 0;
 }
 
 static int dummy_device_pm_action(const struct device *dev,
@@ -33,7 +32,7 @@ static const struct dummy_driver_api funcs = {
 
 int dummy_init(const struct device *dev)
 {
-	return pm_device_runtime_enable(dev);
+	return pm_device_driver_init(dev, dummy_device_pm_action);
 }
 
 PM_DEVICE_DEFINE(dummy_driver, dummy_device_pm_action);

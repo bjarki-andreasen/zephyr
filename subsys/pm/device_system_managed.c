@@ -6,7 +6,6 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/pm/device.h>
-#include <zephyr/pm/device_runtime.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(pm_device, CONFIG_PM_DEVICE_LOG_LEVEL);
@@ -41,8 +40,7 @@ bool pm_suspend_devices(void)
 		 * devices with runtime PM enabled.
 		 */
 		if (!device_is_ready(dev) || pm_device_is_busy(dev) ||
-		    pm_device_wakeup_is_enabled(dev) ||
-		    pm_device_runtime_is_enabled(dev)) {
+		    pm_device_wakeup_is_enabled(dev)) {
 			continue;
 		}
 

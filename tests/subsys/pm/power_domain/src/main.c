@@ -90,21 +90,35 @@ static int devb_pm_action(const struct device *dev,
 	return ret;
 }
 
+static int domain_dev_init(const struct device *dev)
+{
+	return pm_device_driver_init(dev, domain_pm_action);
+}
+
+static int deva_dev_init(const struct device *dev)
+{
+	return pm_device_driver_init(dev, deva_pm_action);
+}
+
+static int devb_dev_init(const struct device *dev)
+{
+	return pm_device_driver_init(dev, devb_pm_action);
+}
 
 PM_DEVICE_DT_DEFINE(TEST_DOMAIN, domain_pm_action);
-DEVICE_DT_DEFINE(TEST_DOMAIN, NULL, PM_DEVICE_DT_GET(TEST_DOMAIN),
+DEVICE_DT_DEFINE(TEST_DOMAIN, domain_dev_init, PM_DEVICE_DT_GET(TEST_DOMAIN),
 		 NULL, NULL, POST_KERNEL, 10, NULL);
 
 PM_DEVICE_DT_DEFINE(TEST_DEVA, deva_pm_action);
-DEVICE_DT_DEFINE(TEST_DEVA, NULL, PM_DEVICE_DT_GET(TEST_DEVA),
+DEVICE_DT_DEFINE(TEST_DEVA, deva_dev_init, PM_DEVICE_DT_GET(TEST_DEVA),
 		 NULL, NULL, POST_KERNEL, 20, NULL);
 
 PM_DEVICE_DT_DEFINE(TEST_DEVB, devb_pm_action);
-DEVICE_DT_DEFINE(TEST_DEVB, NULL, PM_DEVICE_DT_GET(TEST_DEVB),
+DEVICE_DT_DEFINE(TEST_DEVB, devb_dev_init, PM_DEVICE_DT_GET(TEST_DEVB),
 		 NULL, NULL, POST_KERNEL, 30, NULL);
 
 PM_DEVICE_DEFINE(devc, deva_pm_action);
-DEVICE_DEFINE(devc, "devc", NULL, PM_DEVICE_GET(devc),
+DEVICE_DEFINE(devc, "devc", deva_dev_init, PM_DEVICE_GET(devc),
 	      NULL, NULL, POST_KERNEL, 40, NULL);
 
 /**
@@ -122,34 +136,30 @@ ZTEST(power_domain_1cpu, test_power_domain_device_runtime)
 
 	devc = DEVICE_GET(devc);
 
-	pm_device_init_suspended(domain);
-	pm_device_init_suspended(deva);
-	pm_device_init_suspended(devb);
-	pm_device_init_suspended(devc);
-
-	pm_device_runtime_enable(domain);
-	pm_device_runtime_enable(deva);
-	pm_device_runtime_enable(devb);
-	pm_device_runtime_enable(devc);
-
 	ret = pm_device_power_domain_remove(devc, domain);
 	zassert_equal(ret, -ENOENT);
 
 	ret = pm_device_power_domain_add(devc, domain);
 	zassert_equal(ret, 0);
 
-	/* At this point all devices should be SUSPENDED */
+	/* Toggle domain to align devc state given it was just added to domain */
+	ret = pm_device_runtime_get(devc);
+	zassert_equal(ret, 0);
+	ret = pm_device_runtime_put(devc);
+	zassert_equal(ret, 0);
+
+	/* At this point all devices should be OFF and the domain suspended */
 	pm_device_state_get(domain, &state);
 	zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
 
 	pm_device_state_get(deva, &state);
-	zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
+	zassert_equal(state, PM_DEVICE_STATE_OFF);
 
 	pm_device_state_get(devb, &state);
-	zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
+	zassert_equal(state, PM_DEVICE_STATE_OFF);
 
 	pm_device_state_get(devc, &state);
-	zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
+	zassert_equal(state, PM_DEVICE_STATE_OFF);
 
 	/* Now test if "get" a device will resume the domain */
 	ret = pm_device_runtime_get(deva);
@@ -226,11 +236,11 @@ ZTEST(power_domain_1cpu, test_power_domain_device_runtime)
 #define TEST_DEV_BALANCED DT_NODELABEL(test_dev_balanced)
 
 PM_DEVICE_DT_DEFINE(TEST_DOMAIN_BALANCED, domain_pm_action);
-DEVICE_DT_DEFINE(TEST_DOMAIN_BALANCED, NULL, PM_DEVICE_DT_GET(TEST_DOMAIN_BALANCED),
+DEVICE_DT_DEFINE(TEST_DOMAIN_BALANCED, domain_dev_init, PM_DEVICE_DT_GET(TEST_DOMAIN_BALANCED),
 		 NULL, NULL, POST_KERNEL, 10, NULL);
 
 PM_DEVICE_DT_DEFINE(TEST_DEV_BALANCED, deva_pm_action);
-DEVICE_DT_DEFINE(TEST_DEV_BALANCED, NULL, PM_DEVICE_DT_GET(TEST_DEV_BALANCED),
+DEVICE_DT_DEFINE(TEST_DEV_BALANCED, deva_dev_init, PM_DEVICE_DT_GET(TEST_DEV_BALANCED),
 		 NULL, NULL, POST_KERNEL, 20, NULL);
 
 /**
@@ -246,10 +256,6 @@ ZTEST(power_domain_1cpu, test_power_domain_device_balanced)
 	const struct device *dev = DEVICE_DT_GET(TEST_DEV_BALANCED);
 	enum pm_device_state state;
 	int ret;
-
-	/* Init domain */
-	pm_device_init_suspended(balanced_domain);
-	pm_device_runtime_enable(balanced_domain);
 
 	/* At this point domain should be SUSPENDED */
 	pm_device_state_get(balanced_domain, &state);
@@ -277,6 +283,13 @@ ZTEST(power_domain_1cpu, test_power_domain_device_balanced)
 
 	pm_device_state_get(balanced_domain, &state);
 	zassert_equal(state, PM_DEVICE_STATE_ACTIVE);
+
+	/* Put domain again */
+	ret = pm_device_runtime_put(balanced_domain);
+	zassert_equal(ret, 0);
+
+	pm_device_state_get(balanced_domain, &state);
+	zassert_equal(state, PM_DEVICE_STATE_SUSPENDED);
 }
 
 ZTEST(power_domain_1cpu, test_on_power_domain)

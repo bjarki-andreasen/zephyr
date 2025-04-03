@@ -130,7 +130,7 @@ config PM_DEVICE_SHELL
 
 config PM_DEVICE_SYSTEM_MANAGED
 	bool "System-Managed Device Power Management"
-	default y if !PM_DEVICE_RUNTIME
+	depends on !PM_DEVICE_RUNTIME
 	help
 	  This option enables the system-managed device power
 	  management.  The power management subsystem will suspend

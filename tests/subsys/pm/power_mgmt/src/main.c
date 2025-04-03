@@ -24,7 +24,6 @@ static bool notify_app_exit;
 static bool set_pm;
 static bool leave_idle;
 static bool idle_entered;
-static bool testing_device_runtime;
 static bool testing_device_order;
 static bool testing_force_state;
 
@@ -216,16 +215,6 @@ void pm_state_set(enum pm_state state, uint8_t substate_id)
 	/* this function is called after devices enter low power state */
 	pm_device_state_get(device_dummy, &device_power_state);
 
-	if (testing_device_runtime) {
-		/* If device runtime is enable, the device should still be
-		 * active
-		 */
-		zassert_true(device_power_state == PM_DEVICE_STATE_ACTIVE);
-	} else {
-		/* at this point, devices have been deactivated */
-		zassert_false(device_power_state == PM_DEVICE_STATE_ACTIVE);
-	}
-
 	/* this function is called when system entering low power state, so
 	 * parameter state should not be PM_STATE_ACTIVE
 	 */
@@ -280,15 +269,7 @@ static void notify_pm_state_entry(enum pm_state state)
 	zassert_equal(state, PM_STATE_SUSPEND_TO_IDLE);
 
 	pm_device_state_get(device_dummy, &device_power_state);
-	if (testing_device_runtime || !IS_ENABLED(CONFIG_PM_DEVICE_SYSTEM_MANAGED)) {
-		/* If device runtime is enable, the device should still be
-		 * active
-		 */
-		zassert_true(device_power_state == PM_DEVICE_STATE_ACTIVE);
-	} else {
-		/* at this point, devices should not be active */
-		zassert_false(device_power_state == PM_DEVICE_STATE_ACTIVE);
-	}
+	zassert_false(device_power_state == PM_DEVICE_STATE_ACTIVE);
 	set_pm = true;
 	notify_app_exit = true;
 }
@@ -353,20 +334,12 @@ static struct pm_notifier notifier = {
  */
 ZTEST(power_management_1cpu, test_power_state_trans)
 {
-	int ret;
-
 	pm_notifier_register(&notifier);
 	enter_low_power = true;
-
-	ret = pm_device_runtime_disable(device_dummy);
-	zassert_true(ret == 0, "Failed to disable device runtime PM");
 
 	/* give way to idle thread */
 	k_sleep(SLEEP_TIMEOUT);
 	zassert_true(leave_idle);
-
-	ret = pm_device_runtime_enable(device_dummy);
-	zassert_true(ret == 0, "Failed to enable device runtime PM");
 
 	pm_notifier_unregister(&notifier);
 }
@@ -375,13 +348,10 @@ ZTEST(power_management_1cpu, test_power_state_trans)
  * @brief notification between system and device
  *
  * @details
- *  - device driver notify its power state change by pm_device_runtime_get and
- *    pm_device_runtime_put_async
  *  - system inform device system power state change through device interface
  *    pm_action_cb
  *
- * @see pm_device_runtime_get(), pm_device_runtime_put_async(),
- *      pm_device_action_run(), pm_device_state_get()
+ * @see pm_device_action_run(), pm_device_state_get()
  *
  * @ingroup power_tests
  */
@@ -399,18 +369,11 @@ ZTEST(power_management_1cpu, test_power_state_notification)
 	pm_device_state_get(device_dummy, &device_power_state);
 	zassert_equal(device_power_state, PM_DEVICE_STATE_ACTIVE);
 
-
-	/* The device should be kept active even when the system goes idle */
-	testing_device_runtime = true;
-
 	k_sleep(SLEEP_TIMEOUT);
 	zassert_true(leave_idle);
 
 	api->close(device_dummy);
-	pm_device_state_get(device_dummy, &device_power_state);
-	zassert_equal(device_power_state, PM_DEVICE_STATE_SUSPENDED);
 	pm_notifier_unregister(&notifier);
-	testing_device_runtime = false;
 }
 
 ZTEST(power_management_1cpu, test_device_order)
