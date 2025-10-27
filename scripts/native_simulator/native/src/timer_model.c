@@ -69,6 +69,8 @@ static int64_t silent_ticks;
 
 static bool real_time_mode;
 
+static uint32_t real_time_div = 1;
+
 static bool reset_rtc; /*"Reset" the RTC on boot*/
 
 /*
@@ -112,6 +114,11 @@ void hwtimer_set_real_time_mode(bool new_rt)
 	real_time_mode = new_rt;
 }
 
+void hwtimer_set_real_time_div(uint32_t rt_div)
+{
+	real_time_div = rt_div;
+}
+
 static void hwtimer_update_timer(void)
 {
 	hw_timer_timer = NSI_MIN(hw_timer_tick_timer, hw_timer_awake_timer);
@@ -134,9 +141,14 @@ static inline void host_clock_gettime(struct timespec *tv)
 uint64_t get_host_us_time(void)
 {
 	struct timespec tv;
+	uint64_t us;
 
 	host_clock_gettime(&tv);
-	return (uint64_t)tv.tv_sec * 1e6 + tv.tv_nsec / 1000;
+	us = tv.tv_sec;
+	us *= 1000000;
+	us += tv.tv_nsec / 1000;
+	us /= real_time_div;
+	return us;
 }
 
 static void hwtimer_init(void)

@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 void hwtimer_set_real_time_mode(bool new_rt);
+void hwtimer_set_real_time_div(uint32_t rt_div);
 void hwtimer_timer_reached(void);
 void hwtimer_wake_in_time(uint64_t time);
 void hwtimer_set_silent_ticks(int64_t sys_ticks);

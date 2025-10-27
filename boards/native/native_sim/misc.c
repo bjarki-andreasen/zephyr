@@ -12,6 +12,8 @@
 static void set_realtime_default(void)
 {
 	hwtimer_set_real_time_mode(true);
+	hwtimer_set_real_time_div(CONFIG_NATIVE_SIM_REAL_TIME_DIV);
+
 }
 
 NATIVE_TASK(set_realtime_default, PRE_BOOT_1, 0);

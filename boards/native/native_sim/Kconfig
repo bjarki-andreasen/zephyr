@@ -39,6 +39,18 @@ config NATIVE_SIM_SLOWDOWN_TO_REAL_TIME
 	  case the zephyr kernel and application cannot tell the difference unless they
 	  interact with some other driver/device which runs at real time.
 
+if NATIVE_SIM_SLOWDOWN_TO_REAL_TIME
+
+config NATIVE_SIM_REAL_TIME_DIV
+	int "Real time divider"
+	default 1
+	help
+	  Divide the simulated real time. This can be used to provide a consistent
+	  simulation speed at high loads, account for high latencies, and to make
+	  simulations of "fast" events easier to follow.
+
+endif
+
 # This option definition exists only to enable NATIVE_SIM_NATIVE_POSIX_COMPAT
 config BOARD_NATIVE_POSIX
 	bool
