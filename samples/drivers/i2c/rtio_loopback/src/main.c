@@ -8,6 +8,7 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/rtio/rtio.h>
 #include <zephyr/drivers/i2c/rtio.h>
+#include <zephyr/pm/device_runtime.h>
 
 #include <string.h>
 
@@ -385,6 +386,9 @@ int main(void)
 		sample_read_data[n] = n % 0xFF;
 	}
 
+	pm_device_runtime_get(sample_i2c_controller);
+	pm_device_runtime_get(sample_i2c_controller_target);
+
 	printk("%s %s\n", "init_i2c_target", "running");
 	ret = sample_init_i2c_target();
 	if (ret) {
@@ -436,6 +440,9 @@ int main(void)
 		printk("%s %s\n", "rtio_write_read_async", "corrupted");
 		return 0;
 	}
+
+	pm_device_runtime_put(sample_i2c_controller);
+	pm_device_runtime_put(sample_i2c_controller_target);
 
 	printk("sample complete\n");
 	return 0;
