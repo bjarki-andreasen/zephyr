@@ -7,6 +7,7 @@
 #include <zephyr/drivers/comparator.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
+#include <zephyr/pm/device_runtime.h>
 #include <zephyr/ztest.h>
 
 static const struct device *test_dev = DEVICE_DT_GET(DT_ALIAS(test_comp));
@@ -31,12 +32,25 @@ static void test_before(void *f)
 
 	k_sem_reset(&test_sem);
 	zassert_ok(gpio_pin_set_dt(&test_pin, 0));
+	zassert_ok(pm_device_runtime_get(test_dev));
 	zassert_ok(comparator_set_trigger(test_dev, COMPARATOR_TRIGGER_NONE));
 	zassert_ok(comparator_set_trigger_callback(test_dev, NULL, NULL));
 	zassert_between_inclusive(comparator_trigger_is_pending(test_dev), 0, 1);
 }
 
-ZTEST_SUITE(comparator_gpio_loopback, NULL, test_setup, test_before, NULL, NULL);
+static void test_after(void *f)
+{
+	ARG_UNUSED(f);
+
+	k_sem_reset(&test_sem);
+	zassert_ok(gpio_pin_set_dt(&test_pin, 0));
+	zassert_ok(comparator_set_trigger(test_dev, COMPARATOR_TRIGGER_NONE));
+	zassert_ok(comparator_set_trigger_callback(test_dev, NULL, NULL));
+	zassert_between_inclusive(comparator_trigger_is_pending(test_dev), 0, 1);
+	zassert_ok(pm_device_runtime_put(test_dev));
+}
+
+ZTEST_SUITE(comparator_gpio_loopback, NULL, test_setup, test_before, test_after, NULL);
 
 ZTEST(comparator_gpio_loopback, test_get_output)
 {
