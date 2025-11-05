@@ -10,6 +10,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
+#include <zephyr/pm/device_runtime.h>
 #include <stdio.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/sys/util.h>
@@ -211,6 +212,8 @@ ZTEST(i2c_eeprom_target, test_deinit)
 		ztest_test_skip();
 	}
 
+	zassert_ok(pm_device_runtime_put(i2c_0));
+
 	ret = device_deinit(i2c_0);
 	if (ret == -ENOTSUP) {
 		TC_PRINT("  device deinit not supported\n");
@@ -218,6 +221,8 @@ ZTEST(i2c_eeprom_target, test_deinit)
 	}
 
 	zassert_ok(ret);
+
+	zassert_ok(pm_device_runtime_put(i2c_1));
 
 	ret = device_deinit(i2c_1);
 	if (ret == -ENOTSUP) {
@@ -240,6 +245,8 @@ ZTEST(i2c_eeprom_target, test_deinit)
 	zassert_ok(gpio_pin_configure_dt(&scl_pin_1, GPIO_INPUT));
 	zassert_ok(device_init(i2c_0));
 	zassert_ok(device_init(i2c_1));
+	zassert_ok(pm_device_runtime_get(i2c_0));
+	zassert_ok(pm_device_runtime_get(i2c_1));
 }
 
 ZTEST(i2c_eeprom_target, test_eeprom_target)
@@ -351,4 +358,26 @@ ZTEST(i2c_eeprom_target, test_eeprom_target)
 	}
 }
 
-ZTEST_SUITE(i2c_eeprom_target, NULL, NULL, NULL, NULL, NULL);
+static void test_before(void *f)
+{
+	const struct device *const i2c_0 = DEVICE_DT_GET(DT_BUS(NODE_EP0));
+	const struct device *const i2c_1 = DEVICE_DT_GET(DT_BUS(NODE_EP1));
+
+	ARG_UNUSED(f);
+
+	zassert_ok(pm_device_runtime_get(i2c_0));
+	zassert_ok(pm_device_runtime_get(i2c_1));
+}
+
+static void test_after(void *f)
+{
+	const struct device *const i2c_0 = DEVICE_DT_GET(DT_BUS(NODE_EP0));
+	const struct device *const i2c_1 = DEVICE_DT_GET(DT_BUS(NODE_EP1));
+
+	ARG_UNUSED(f);
+
+	zassert_ok(pm_device_runtime_put(i2c_0));
+	zassert_ok(pm_device_runtime_put(i2c_1));
+}
+
+ZTEST_SUITE(i2c_eeprom_target, NULL, NULL, test_before, test_after, NULL);
