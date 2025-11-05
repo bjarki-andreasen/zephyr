@@ -17,6 +17,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/pm/device_runtime.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -270,4 +271,23 @@ static void *pwm_gpio_loopback_setup(void)
 	return NULL;
 }
 
-ZTEST_SUITE(pwm_gpio_loopback, NULL, pwm_gpio_loopback_setup, NULL, NULL, NULL);
+static void pwm_gpio_loopback_before(void *f)
+{
+	ARG_UNUSED(f);
+
+	for (int i = 0; i < TEST_PWM_COUNT; i++) {
+		zassert_ok(pm_device_runtime_get(pwms_dt[i].dev));
+	}
+}
+
+static void pwm_gpio_loopback_after(void *f)
+{
+	ARG_UNUSED(f);
+
+	for (int i = 0; i < TEST_PWM_COUNT; i++) {
+		zassert_ok(pm_device_runtime_put(pwms_dt[i].dev));
+	}
+}
+
+ZTEST_SUITE(pwm_gpio_loopback, NULL, pwm_gpio_loopback_setup, pwm_gpio_loopback_before,
+	    pwm_gpio_loopback_after, NULL);
