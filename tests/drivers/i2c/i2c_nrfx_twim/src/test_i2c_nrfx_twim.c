@@ -162,4 +162,20 @@ ZTEST(i2c_nrfx_twim_async, test_01_i2c_nrfx_twim_exclusive_access)
 			  some_other_thread_tx_buf.len);
 }
 
-ZTEST_SUITE(i2c_nrfx_twim_async, NULL, NULL, NULL, NULL, NULL);
+static void test_before(void *f)
+{
+	ARG_UNUSED(f);
+
+	zassert_ok(pm_device_runtime_get(sample_i2c_controller));
+	zassert_ok(pm_device_runtime_get(sample_i2c_controller_target));
+}
+
+static void test_after(void *f)
+{
+	ARG_UNUSED(f);
+
+	zassert_ok(pm_device_runtime_put(sample_i2c_controller));
+	zassert_ok(pm_device_runtime_put(sample_i2c_controller_target));
+}
+
+ZTEST_SUITE(i2c_nrfx_twim_async, NULL, NULL, test_before, test_after, NULL);
