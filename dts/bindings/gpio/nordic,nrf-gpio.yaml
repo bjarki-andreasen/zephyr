@@ -37,6 +37,9 @@ properties:
 
         port = <1>;
 
+  feature-gpio-pins:
+    type: phandle-array
+
 gpio-cells:
   - pin
   - flags

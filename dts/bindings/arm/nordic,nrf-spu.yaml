@@ -10,3 +10,38 @@ properties:
 
   interrupts:
     required: true
+
+  "#periph-perm-cells":
+    type: int
+    const: 2
+
+  "#feature-gpiote-ch-cells":
+    type: int
+    const: 3
+
+  "#feature-gpiote-int":
+    type: int
+    const: 3
+
+  "#feature-gpio-pin":
+    type: int
+    const: 3
+
+periph-perm-cells:
+  - n
+  - value
+
+feature-gpiote-ch-cells:
+  - n
+  - o
+  - value
+
+feature-gpiote-int-cells:
+  - n
+  - o
+  - value
+
+feature-gpio-pin-cells:
+  - n
+  - o
+  - value

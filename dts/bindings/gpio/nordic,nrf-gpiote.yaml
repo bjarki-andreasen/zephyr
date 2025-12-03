@@ -39,3 +39,9 @@ properties:
       And GPIOTE1 has:
 
         instance = <1>;
+
+  feature-gpiote-chs:
+    type: phandle-array
+
+  feature-gpiote-ints:
+    type: phandle-array

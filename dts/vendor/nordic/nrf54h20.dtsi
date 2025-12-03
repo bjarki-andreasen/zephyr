@@ -826,6 +826,16 @@
 				nordic,clockpin-enable = <NRF_FUN_SPIM_SCK>;
 			};
 
+			spu130: spu@900000 {
+				compatible = "nordic,nrf-spu";
+				reg = <0x900000 0x1000>;
+				interrupts = <256 NRF_DEFAULT_IRQ_PRIORITY>;
+				#periph-perm-cells = <2>;
+				#feature-gpiote-ch-cells = <3>;
+				#feature-gpiote-int-cells = <3>;
+				#feature-gpio-pin-cells = <3>;
+			};
+
 			cpuppr_vpr: vpr@908000 {
 				compatible = "nordic,nrf-vpr-coprocessor";
 				reg = <0x908000 0x1000>;
@@ -833,6 +843,8 @@
 				#address-cells = <1>;
 				#size-cells = <1>;
 				ranges = <0x0 0x908000 0x1000>;
+
+				periph-perms = <&spu130 0x8 0x200>; /* periph 8, ownership APPLICATION */
 
 				cpuppr_vevif_tx: mailbox@0 {
 					compatible = "nordic,nrf-vevif-task-tx";
@@ -842,6 +854,16 @@
 					nordic,tasks = <16>;
 					nordic,tasks-mask = <0xfffffff0>;
 				};
+			};
+
+			spu131: spu@920000 {
+				compatible = "nordic,nrf-spu";
+				reg = <0x920000 0x1000>;
+				interrupts = <288 NRF_DEFAULT_IRQ_PRIORITY>;
+				#periph-perm-cells = <2>;
+				#feature-gpiote-ch-cells = <3>;
+				#feature-gpiote-int-cells = <3>;
+				#feature-gpio-pin-cells = <3>;
 			};
 
 			ipct130: ipct@921000 {
@@ -906,8 +928,12 @@
 			gpiote130: gpiote@934000 {
 				compatible = "nordic,nrf-gpiote";
 				reg = <0x934000 0x1000>;
+
 				status = "disabled";
 				instance = <130>;
+
+				feature-gpiote-chs = <&spu131 0x14 0 0>; /* n (peripheral) is 0x14, o (channel) is 0, value is 0 (NONE/GLOBAL ownership)*/
+				feature-gpiote-ints = <&spu131 0x14 0 0>; /* n (peripheral) is 0x14, o (interrupt) is 0, value is 0 (NONE/GLOBAL ownership)*/
 			};
 
 			gpio0: gpio@938000 {
@@ -944,6 +970,11 @@
 				ngpios = <12>;
 				port = <2>;
 				zephyr,pm-device-runtime-auto;
+				feature-gpio-pins = <&spu131 0x18 0 0x200>, /* n (peripheral) is 0x18, o (pin) is 0, value is 0x200 (APPLICATION ownership) */
+						    <&spu131 0x18 1 0x200>, /* n (peripheral) is 0x18, o (pin) is 1, value is 0x200 (APPLICATION ownership) */
+						    <&spu131 0x18 2 0x200>, /* n (peripheral) is 0x18, o (pin) is 2, value is 0x200 (APPLICATION ownership) */
+						    <&spu131 0x18 3 0x200>, /* n (peripheral) is 0x18, o (pin) is 3, value is 0x200 (APPLICATION ownership) */
+						    <&spu131 0x18 4 0>;     /* n (peripheral) is 0x18, o (pin) is 4, value is 0x000 (NONE/GLOBAL ownership) */
 			};
 
 			gpio6: gpio@938c00 {

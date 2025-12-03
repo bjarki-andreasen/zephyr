@@ -35,3 +35,6 @@ properties:
     type: boolean
     description: |
       Enables setting VPR core's DMA secure attribute to secure.
+
+  periph-perms:
+    type: phandle-array
