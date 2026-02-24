@@ -12,3 +12,7 @@ properties:
   write-block-size:
     type: int
     description: address alignment required by flash write operations
+
+  memory:
+    type: phandle
+    description: memory the flash is memory mapped to.

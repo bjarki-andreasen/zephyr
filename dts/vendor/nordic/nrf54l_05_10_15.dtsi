@@ -95,12 +95,6 @@
 			#nordic,ficr-cells = <1>;
 		};
 
-		cpuapp_sram: memory@20000000 {
-			compatible = "mmio-sram";
-			#address-cells = <1>;
-			#size-cells = <1>;
-		};
-
 #ifdef USE_NON_SECURE_ADDRESS_MAP
 		global_peripherals: peripheral@40000000 {
 			reg = <0x40000000 0x10000000>;
@@ -730,14 +724,6 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			interrupts = <75 NRF_DEFAULT_IRQ_PRIORITY>;
-
-			cpuapp_rram: rram@0 {
-				compatible = "soc-nv-flash";
-				erase-block-size = <4096>;
-				write-block-size = <16>;
-				#address-cells = <1>;
-				#size-cells = <1>;
-			};
 		};
 
 		nrf_mpc: memory@50041000 {

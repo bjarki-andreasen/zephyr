@@ -6,12 +6,30 @@
 
 #include "nrf54l_05_10_15.dtsi"
 
-&cpuapp_sram {
-	reg = <0x20000000 DT_SIZE_K(96)>;
-	ranges = <0x0 0x20000000 DT_SIZE_K(96)>;
+/ {
+	cpuapp_rram: memory@0 {
+		device_type = "memory";
+		reg = <0x0 DT_SIZE_K(500)>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x0 0x0 DT_SIZE_K(500)>;
+	};
+
+	cpuapp_sram: memory@20000000 {
+		device_type = "memory";
+		reg = <0x20000000 DT_SIZE_K(96)>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x0 0x20000000 DT_SIZE_K(96)>;
+	};
 };
 
-&cpuapp_rram {
-	reg = <0x0 DT_SIZE_K(500)>;
-	ranges = <0x0 0x0 DT_SIZE_K(500)>;
+&rram_controller {
+	rram@0 {
+		compatible = "soc-nv-flash";
+		reg = <0x0 DT_SIZE_K(500)>;
+		erase-block-size = <4096>;
+		write-block-size = <16>;
+		memory = <&cpuapp_rram>;
+	};
 };
