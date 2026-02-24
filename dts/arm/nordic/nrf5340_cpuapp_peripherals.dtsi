@@ -536,10 +536,12 @@ flash_controller: flash-controller@39000 {
 	#address-cells = <1>;
 	#size-cells = <1>;
 
-	flash0: flash@0 {
+	flash@0 {
 		compatible = "soc-nv-flash";
+		reg = <0x0 DT_SIZE_K(1024)>;
 		erase-block-size = <4096>;
 		write-block-size = <4>;
+		memory = <&flash0>;
 	};
 };
 
