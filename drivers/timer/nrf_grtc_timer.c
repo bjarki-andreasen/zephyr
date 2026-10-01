@@ -12,6 +12,7 @@
 	!(defined(CONFIG_SOC_SERIES_NRF54H) || defined(CONFIG_SOC_SERIES_NRF92))
 #include <zephyr/drivers/clock_control/nrf_clock_control.h>
 #endif
+#include <zephyr/drivers/clock_management.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/timer/system_timer.h>
 #include <zephyr/drivers/timer/nrf_grtc_timer.h>
@@ -22,6 +23,16 @@
 #define GRTC_NODE DT_NODELABEL(grtc)
 #define HFCLK_NODE DT_PHANDLE_BY_NAME(GRTC_NODE, clocks, hfclock)
 #define LFCLK_NODE DT_PHANDLE_BY_NAME(GRTC_NODE, clocks, lfclock)
+
+#if CONFIG_CLOCK_MANAGEMENT
+CLOCK_MANAGEMENT_DT_DEFINE(GRTC_NODE);
+static const struct clock_management_data *clk_data =
+	CLOCK_MANAGEMENT_DT_GET(GRTC_NODE);
+static clock_request_t clk_req_default =
+	CLOCK_MANAGEMENT_DT_GET_REQUEST(GRTC_NODE, default);
+static clock_request_t clk_req_sleep =
+	CLOCK_MANAGEMENT_DT_GET_REQUEST(GRTC_NODE, sleep);
+#endif
 
 /* Ensure that GRTC properties in devicetree are defined correctly. */
 #if !DT_NODE_HAS_PROP(GRTC_NODE, owned_channels)
@@ -531,6 +542,8 @@ void sys_clock_disable(void)
 
 	nrfx_grtc_uninit();
 	nrfx_coredep_delay_us(1000);
+#elif CONFIG_CLOCK_MANAGEMENT
+	clock_management_request_state(clk_data, clk_req_sleep);
 #else
 	nrfx_grtc_uninit();
 #endif
@@ -606,6 +619,8 @@ static int grtc_post_init(void)
 				   : CLOCK_CONTROL_NRF_LF_START_STABLE);
 
 	z_nrf_clock_control_lf_on(mode);
+#elif CONFIG_CLOCK_MANAGEMENT
+	clock_management_request_state(clk_data, clk_req_default);
 #endif
 
 #if defined(CONFIG_NRF_GRTC_ALWAYS_ON)

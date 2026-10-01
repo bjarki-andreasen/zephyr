@@ -97,7 +97,7 @@ endif # NRFX_CLOCK_LFCLK
 
 config NRFX_CLOCK_XO
 	bool "XO driver"
-	depends on $(dt_nodelabel_exists,xo) || CLOCK_CONTROL_NRF
+	depends on $(dt_nodelabel_exists,xo) || CLOCK_CONTROL_NRF || $(dt_nodelabel_exists,hfpll_mux)
 
 config NRFX_CLOCK_XO24M
 	bool "XO24M driver"

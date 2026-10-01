@@ -5,7 +5,9 @@ description: Nordic nRF timer node
 
 compatible: "nordic,nrf-timer"
 
-include: base.yaml
+include:
+  - base.yaml
+  - clock-device.yaml
 
 properties:
   reg:

@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: Copyright 2026 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+description: Test clock device
+
+compatible: vnd,clock-device
+
+include: clock-device.yaml

@@ -477,7 +477,7 @@
 
 #if defined(CONFIG_SOC_NRF54L_CPUAPP_COMMON) && DT_PROP(DT_NODELABEL(hfpll), clock_frequency)
 #ifndef NRF_CONFIG_CPU_FREQ_MHZ
-#define NRF_CONFIG_CPU_FREQ_MHZ (DT_PROP(DT_NODELABEL(hfpll), clock_frequency) / 1000000)
+#define NRF_CONFIG_CPU_FREQ_MHZ (128 / DT_PROP(DT_NODELABEL(hclkcore), divider))
 #endif
 #endif
 

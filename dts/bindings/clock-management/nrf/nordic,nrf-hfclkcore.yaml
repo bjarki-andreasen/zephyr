@@ -1,0 +1,17 @@
+# Copyright 2026 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: "nordic,nrf-hfclkcore"
+
+description: Nordic nRF HFCLKCORE clock driver
+
+include: [clock-node.yaml]
+
+properties:
+  input:
+    type: phandle
+    required: true
+    description: Clock node that is the input to this divider
+
+  "#clock-cells":
+    const: 0

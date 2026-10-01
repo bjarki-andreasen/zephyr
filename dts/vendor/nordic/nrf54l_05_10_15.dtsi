@@ -27,7 +27,7 @@
 			compatible = "arm,cortex-m33f";
 			reg = <0>;
 			device_type = "cpu";
-			clocks = <&hfpll>;
+			clock-outputs = <&hclkcore_clock_output>;
 			#address-cells = <1>;
 			#size-cells = <1>;
 
@@ -42,7 +42,7 @@
 			compatible = "nordic,vpr", "riscv";
 			reg = <1>;
 			device_type = "cpu";
-			clocks = <&hfpll>;
+			clock-outputs = <&hclkcore_clock_output>;
 			riscv,isa-base = "rv32e";
 			riscv,isa-extensions = "e", "m", "c", "zicsr",
 					       "zba", "zbb", "zbc", "zbs", "zcb";
@@ -50,30 +50,151 @@
 		};
 	};
 
-	clocks {
-		pclk: pclk {
-			compatible = "fixed-clock";
-			#clock-cells = <0>;
-			clock-frequency = <DT_FREQ_M(16)>;
-		};
+	hfint: hfint {
+		compatible = "fixed-clock";
+		clock-frequency = <DT_FREQ_M(32)>;
+		#clock-cells = <0>;
+	};
 
-		lfxo: lfxo {
-			compatible = "nordic,nrf54l-lfxo";
-			#clock-cells = <0>;
-			clock-frequency = <32768>;
-		};
+	hfxo: hfxo {
+		compatible = "nordic,nrf54l-hfxo", "fixed-clock";
+		clock-frequency = <DT_FREQ_M(32)>;
+		#clock-cells = <0>;
+		startup-time-us = <1650>;
+	};
 
-		hfxo: hfxo {
-			compatible = "nordic,nrf54l-hfxo";
-			#clock-cells = <0>;
-			clock-frequency = <DT_FREQ_M(32)>;
-			startup-time-us = <1650>;
-		};
+	hfpll_mux: hfpll-mux {
+		compatible = "nordic,nrf-hfpll-mux";
+		input-sources = <&hfint>, <&hfxo>;
+		#clock-cells = <1>;
 
-		hfpll: hfpll {
-			compatible = "fixed-clock";
+		hfpll_mux_clock_output: clock-output {
+			compatible = "clock-output";
 			#clock-cells = <0>;
-			clock-frequency = <DT_FREQ_M(128)>;
+
+			hfpll_mux_clock_output_state_hfint: clock-output-state-hfint {
+				compatible = "clock-state";
+				clocks = <&hfpll_mux 0>;
+				rank = <0>;
+			};
+
+			hfpll_mux_clock_output_state_hfxo: clock-output-state-hfxo {
+				compatible = "clock-state";
+				clocks = <&hfpll_mux 1>;
+				rank = <1>;
+			};
+		};
+	};
+
+	hfpll: hfpll {
+		compatible = "nordic,nrf-fixed-factor";
+		input = <&hfpll_mux>;
+		#clock-cells = <0>;
+		multiplier = <4>;
+
+		hfpll_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
+		};
+	};
+
+	/*
+	 * The clock has to be set as a fixed factor clock in the devicetree as it must be set on
+	 * startup and is not runtime configurable.
+	 */
+	hclkcore: hclkcore {
+		compatible = "nordic,nrf-fixed-factor";
+		input = <&hfpll>;
+		#clock-cells = <0>;
+		divider = <1>;
+
+		hclkcore_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
+		};
+	};
+
+	pclk: pclk {
+		compatible = "nordic,nrf-fixed-factor";
+		input = <&hfpll>;
+		#clock-cells = <0>;
+		divider = <4>;
+
+		pclk_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
+		};
+	};
+
+	lfrc: lfrc {
+		compatible = "fixed-clock";
+		clock-frequency = <32768>;
+		#clock-cells = <0>;
+
+		lfrc_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
+		};
+	};
+
+	lfxo: lfxo {
+		compatible = "nordic,nrf54l-lfxo", "fixed-clock";
+		clock-frequency = <32768>;
+		#clock-cells = <0>;
+	};
+
+	synth: synth {
+		compatible = "nordic,nrf-fixed-factor";
+		input = <&hfpll>;
+		#clock-cells = <0>;
+		multiplier = <32>;
+		divider = <125>;
+
+		synth_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
+		};
+	};
+
+	lfclk_mux: lfclk-mux {
+		compatible = "nordic,nrf-lfclk-mux";
+		input-sources = <&lfrc>,
+				<&lfxo>,
+				<&synth>;
+		#clock-cells = <1>;
+
+		lfclk_mux_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
+
+			lfclk_mux_clock_output_state_lfrc: clock-output-state-lfrc {
+				compatible = "clock-state";
+				clocks = <&lfclk_mux 0>;
+				rank = <1>;
+			};
+
+			lfclk_mux_clock_output_state_lfxo: clock-output-state-lfxo {
+				compatible = "clock-state";
+				clocks = <&lfclk_mux 1>;
+				rank = <0>;
+			};
+
+			lfclk_mux_clock_output_state_synth: clock-output-state-synth {
+				compatible = "clock-state";
+				clocks = <&lfclk_mux 2>;
+				rank = <2>;
+			};
+		};
+	};
+
+	lfclk: lfclk {
+		compatible = "nordic,nrf-fixed-factor";
+		input = <&lfclk_mux>;
+		#clock-cells = <0>;
+
+		lfclk_clock_output: clock-output {
+			compatible = "clock-output";
+			#clock-cells = <0>;
 		};
 	};
 
@@ -153,7 +274,8 @@
 				#size-cells = <0>;
 				reg = <0x4a000 0x1000>;
 				interrupts = <74 NRF_DEFAULT_IRQ_PRIORITY>;
-				clocks = <&hfpll>;
+				clock-outputs = <&hfpll_clock_output>;
+				clock-output-names = "default";
 				max-frequency = <DT_FREQ_M(32)>;
 				easydma-maxcnt-bits = <16>;
 				rx-delay-supported;
@@ -165,7 +287,8 @@
 				compatible = "nordic,nrf-uarte";
 				reg = <0x4a000 0x1000>;
 				interrupts = <74 NRF_DEFAULT_IRQ_PRIORITY>;
-				clocks = <&hfpll>;
+				clock-outputs = <&hfpll_clock_output>;
+				clock-output-names = "default";
 				status = "disabled";
 				endtx-stoptx-supported;
 				frame-timeout-supported;
@@ -209,7 +332,8 @@
 				cc-num = <6>;
 				max-bit-width = <32>;
 				interrupts = <85 NRF_DEFAULT_IRQ_PRIORITY>;
-				clocks = <&hfpll>;
+				clock-outputs = <&hfpll_clock_output>;
+				clock-output-names = "default";
 				prescaler = <0>;
 			};
 
@@ -242,7 +366,8 @@
 				cc-num = <8>;
 				max-bit-width = <32>;
 				interrupts = <133 NRF_DEFAULT_IRQ_PRIORITY>;
-				clocks = <&hfxo>;
+				clock-outputs = <&hfxo>;
+				clock-output-names = "default";
 				prescaler = <0>;
 			};
 
@@ -593,8 +718,10 @@
 				compatible = "nordic,nrf-grtc";
 				reg = <0xe2000 0x1000>;
 				cc-num = <12>;
-				clocks = <&lfxo>, <&pclk>;
-				clock-names = "lfclock", "hfclock";
+				clock-outputs = <&lfrc_clock_output>;
+				clock-request-0 = <&lfclk_mux_clock_output_state_lfxo>;
+				clock-request-1 = <&lfclk_mux_clock_output_state_lfrc>;
+				clock-request-names = "default", "sleep";
 				status = "disabled";
 				extended-channels = <0>;
 			};
@@ -665,11 +792,6 @@
 					status = "disabled";
 					clock-frequency = <DT_FREQ_M(32)>;
 					#clock-cells = <0>;
-				};
-
-				lfclk: lfclk {
-					compatible = "nordic,nrf-clock-lfclk";
-					status = "disabled";
 				};
 			};
 

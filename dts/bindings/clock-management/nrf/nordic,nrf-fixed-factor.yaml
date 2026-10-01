@@ -1,0 +1,25 @@
+# Copyright 2026 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: "nordic,nrf-fixed-factor"
+
+description: Nordic nRF fixed factor clock driver
+
+include: [clock-node.yaml]
+
+properties:
+  input:
+    type: phandle
+    required: true
+    description: Clock node that is the input to this divider
+
+  divider:
+    type: int
+    description: The fixed divider value
+
+  multiplier:
+    type: int
+    description: The fixed multiplier value
+
+  "#clock-cells":
+    const: 0
