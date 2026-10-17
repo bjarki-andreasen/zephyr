@@ -1,0 +1,14 @@
+choice "SOC_TEE_$(feature)"
+	prompt "TEE implementation for $(feature)"
+	default SOC_TEE_$(feature)_NATIVE
+
+config SOC_TEE_$(feature)_NATIVE
+	bool "Use native implementation of $(feature)"
+
+config SOC_TEE_$(feature)_CUSTOM
+	bool "Use hook for custom implementation of $(feature)"
+
+config SOC_TEE_$(feature)_DISABLED
+	bool "Exclude implementation of $(feature)"
+
+endchoice

@@ -7,6 +7,8 @@
 #include <zephyr/toolchain.h>
 #include <zephyr/drivers/retained_mem/nrf_retained_mem.h>
 
+#include <soc_tee.h>
+
 #if defined(CONFIG_SOC_SERIES_NRF51) || defined(CONFIG_SOC_SERIES_NRF52)
 #include <hal/nrf_power.h>
 #elif defined(CONFIG_SOC_SERIES_NRF54H) || defined(CONFIG_SOC_SERIES_NRF92)
@@ -28,7 +30,8 @@
 #define VPR_RET_BIT   MEMCONF_POWER_RET_MEM0_Pos
 #endif
 
-void z_sys_poweroff(void)
+#if CONFIG_SOC_TEE_POWEROFF_NATIVE
+static void soc_tee_poweroff_native(void)
 {
 #if defined(CONFIG_HAS_NORDIC_RAM_CTRL)
 	/* nRF71 disables RAM retention during secure early initialization. */
@@ -64,4 +67,14 @@ void z_sys_poweroff(void)
 #endif
 
 	CODE_UNREACHABLE;
+}
+#endif
+
+void z_sys_poweroff(void)
+{
+#if CONFIG_SOC_TEE_POWEROFF_NATIVE
+	soc_tee_poweroff_native();
+#elif CONFIG_SOC_TEE_POWEROFF_CUSTOM
+	soc_tee_poweroff_custom();
+#endif
 }

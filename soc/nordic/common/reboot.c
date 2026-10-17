@@ -9,10 +9,11 @@
 #include <helpers/nrfx_ram_ctrl.h>
 #endif
 
-void sys_arch_reboot(int type)
-{
-	ARG_UNUSED(type);
+#include <soc_tee.h>
 
+#if CONFIG_SOC_TEE_REBOOT_NATIVE
+static void soc_tee_reboot_native(void)
+{
 #ifdef CONFIG_NRF_FORCE_RAM_ON_REBOOT
 	uint8_t *ram_start;
 	size_t ram_size;
@@ -45,4 +46,16 @@ void sys_arch_reboot(int type)
 #endif
 
 	NVIC_SystemReset();
+}
+#endif
+
+void sys_arch_reboot(int type)
+{
+	ARG_UNUSED(type);
+
+#if CONFIG_SOC_TEE_REBOOT_NATIVE
+	soc_tee_reboot_native();
+#elif CONFIG_SOC_TEE_REBOOT_CUSTOM
+	soc_tee_reboot_custom();
+#endif
 }
