@@ -14,11 +14,14 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/sys/util.h>
 
-#if defined(CONFIG_TRUSTED_EXECUTION_NONSECURE)
-#if NRF_GPIO_HAS_SEL
-void soc_secure_gpio_pin_mcu_select(uint32_t pin_number, nrf_gpio_pin_sel_t mcu);
-#endif
+#include <soc_gpio.h>
 
+static inline void soc_secure_gpio_pin_mcu_select(uint32_t pin_number, nrf_gpio_pin_sel_t mcu)
+{
+	soc_gpio_pin_mcu_select(pin_number, mcu);
+}
+
+#if defined(CONFIG_TRUSTED_EXECUTION_NONSECURE)
 int soc_secure_mem_read(void *dst, void *src, size_t len);
 
 #if DT_HAS_COMPAT_STATUS_OKAY(nordic_tz_secure)
@@ -97,12 +100,6 @@ static inline int soc_secure_flash_read(void *dst, void *src, size_t len)
 #endif /* DT_HAS_COMPAT_STATUS_OKAY(nordic_tz_secure) */
 
 #else /* !defined(CONFIG_TRUSTED_EXECUTION_NONSECURE) */
-#if NRF_GPIO_HAS_SEL
-static inline void soc_secure_gpio_pin_mcu_select(uint32_t pin_number, nrf_gpio_pin_sel_t mcu)
-{
-	nrf_gpio_pin_control_select(pin_number, mcu);
-}
-#endif /* NRF_GPIO_HAS_SEL */
 
 static inline int soc_secure_mem_read(void *dst, void *src, size_t len)
 {

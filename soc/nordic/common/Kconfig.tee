@@ -3,3 +3,6 @@ rsource "Kconfig.tee_feature"
 
 feature = POWEROFF
 rsource "Kconfig.tee_feature"
+
+feature = GPIO_PIN_MCU_SELECT
+rsource "Kconfig.tee_feature"

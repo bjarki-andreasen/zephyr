@@ -185,6 +185,9 @@ config GPPI_EXT_ALLOCATOR_TIMEOUT
 	  Timeout in milliseconds for GPPI external allocator IPC semaphore and
 	  mutex operations.
 
+config SOC_GPIO
+	bool "Include SOC specific GPIO features"
+
 rsource "vpr/Kconfig"
 rsource "uicr/Kconfig"
 rsource "Kconfig.tee"

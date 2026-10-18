@@ -37,7 +37,7 @@ if(CONFIG_NRFX_GPPI)
 endif()
 
 if(CONFIG_TFM_PARTITION_PLATFORM)
-  zephyr_library_sources(soc_secure.c)
+  zephyr_library_sources(soc_secure.c soc_tfm.c)
   zephyr_library_include_directories(
     $<TARGET_PROPERTY:tfm,TFM_BINARY_DIR>/api_ns/interface/include
   )
@@ -47,3 +47,4 @@ zephyr_library_sources_ifdef(CONFIG_NRF_SYS_EVENT nrf_sys_event.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_NRF_FORCE_CONSTLAT nrf_constlat.c)
 zephyr_library_sources_ifdef(CONFIG_MRAM_LATENCY mram_latency.c)
 zephyr_library_sources(gpiote_nrfx.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_GPIO soc_gpio.c)

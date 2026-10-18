@@ -12,18 +12,6 @@
 #include "tfm_platform_api.h"
 #include "tfm_ioctl_api.h"
 
-#if NRF_GPIO_HAS_SEL
-void soc_secure_gpio_pin_mcu_select(uint32_t pin_number, nrf_gpio_pin_sel_t mcu)
-{
-	uint32_t result;
-	enum tfm_platform_err_t err;
-
-	err = tfm_platform_gpio_pin_mcu_select(pin_number, mcu, &result);
-	__ASSERT(err == TFM_PLATFORM_ERR_SUCCESS, "TFM platform error (%d)", err);
-	__ASSERT(result == 0, "GPIO service error (%d)", result);
-}
-#endif /* NRF_GPIO_HAS_SEL */
-
 int soc_secure_mem_read(void *dst, void *src, size_t len)
 {
 	enum tfm_platform_err_t status;
@@ -47,13 +35,6 @@ int soc_secure_mem_read(void *dst, void *src, size_t len)
 }
 
 #else
-
-#if NRF_GPIO_HAS_SEL
-void soc_secure_gpio_pin_mcu_select(uint32_t pin_number, nrf_gpio_pin_sel_t mcu)
-{
-	__ASSERT(FALSE, "This function can only be called from Zephyr NS app.");
-}
-#endif /* NRF_GPIO_HAS_SEL */
 
 int soc_secure_mem_read(void *dst, void *src, size_t len)
 {
